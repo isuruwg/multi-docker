@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t isurug/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run isurug/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t isurug/multi-client ./client
+  - docker build -t isurug/multi-nginx ./nginx
+  - docker build -t isurug/multi-server ./server
+  - docker build -t isurug/multi-worker ./worker
+  # Log in to the docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push images to dockerhub
+  - docker push isurug/multi-client
+  - docker push isurug/multi-nginx
+  - docker push isurug/multi-server
+  - docker push isurug/multi-worker
